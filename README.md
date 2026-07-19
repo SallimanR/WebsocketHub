@@ -8,6 +8,11 @@ WebsocketHub is a standalone server / Go library that supports registering
 channels with specific message type for specific roles
 
 ## Usage as library
+### install the library:
+```sh
+go get github.com/SallimanR/websockethub
+```
+
 ### with gin router, allowed origins for CORS protection and auth middleware
 ```go
 import (
