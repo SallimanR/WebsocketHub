@@ -8,11 +8,11 @@ WebsocketHub is a standalone server / Go library that supports registering
 channels with specific message type for specific roles
 
 ## Usage as standalone server
-### install the binary:
+#### install the binary:
 ```sh
 go install github.com/SallimanR/websockethub@latest
 ```
-### run the server:
+#### run the server:
 ```sh
 websockethub -config websockethub.json
 ```
@@ -29,12 +29,12 @@ Example config:
 ```
 
 ## Usage as library
-### install the library:
+#### install the library:
 ```sh
 go get github.com/SallimanR/websockethub
 ```
 
-### with gin router, allowed origins for CORS protection and auth middleware
+example with gin router, allowed origins for CORS protection and auth middleware
 ```go
 import (
     "github.com/SallimanR/websockethub/websockethub"
@@ -52,7 +52,7 @@ func registerWSRoutes(router *gin.Engine, origins []string, authMiddleware gin.H
 	wsGroup.GET("/:role", wsServer.WebsocketUpgradeHandler)
 }
 ```
-### register channel with message type
+#### register channel with message type
 example with gps realtime channel
 ```go
 import (
@@ -127,13 +127,13 @@ func (c *GPSRealtimeChannel) GetMessages(publisherIDs []int64) ([]byte, error) {
 ```
 
 ## Developing
-### Development mode:
+#### Development mode:
 run server with hot code reload:
 ```sh
 air
 ```
 
-### Production:
+#### Production:
 run in the project root:
 ```sh
 go run .
@@ -143,12 +143,12 @@ Or build the binary:
 go build -o ./bin/websockethub .
 ```
 
-### Running tests:
+#### Running tests:
 ```sh
 go test ./...
 ```
 
-### generate protobuf
+#### generate protobuf
 ```sh
 generate_protobuf.sh
 
