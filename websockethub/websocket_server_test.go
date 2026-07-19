@@ -17,9 +17,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 
-	pb "github.com/SallimanR/websockethub/websockethub/proto"
 	"github.com/SallimanR/websockethub/test/testutils/network"
 	testws "github.com/SallimanR/websockethub/test/testutils/websocket"
+	pb "github.com/SallimanR/websockethub/websockethub/proto"
 )
 
 type mockSession struct {

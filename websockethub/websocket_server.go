@@ -11,8 +11,8 @@ import (
 	"github.com/rs/zerolog"
 	"google.golang.org/protobuf/proto"
 
-	wsPB "github.com/SallimanR/websockethub/websockethub/proto"
 	datastructures "github.com/SallimanR/websockethub/pkg/data_structures"
+	wsPB "github.com/SallimanR/websockethub/websockethub/proto"
 )
 
 type AuthSession interface {
