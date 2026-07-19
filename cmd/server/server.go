@@ -8,7 +8,8 @@ import (
 	"strings"
 	"time"
 
-		"github.com/SallimanR/websockethub/websockethub"
+	"github.com/SallimanR/websockethub/websockethub"
+	wsPB "github.com/SallimanR/websockethub/websockethub/proto"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -24,8 +25,10 @@ type Server struct {
 
 	httpServer *http.Server
 
-	wsServer *websockethub.WebsocketServer
-	logger   zerolog.Logger
+	wsServer       *websockethub.WebsocketServer
+	authMiddleware gin.HandlerFunc
+	logger         zerolog.Logger
+	config         *Config
 }
 
 type Option func(*Server) error
@@ -59,6 +62,21 @@ func NewServer(options ...Option) (*Server, error) {
 	}
 
 	return s, nil
+}
+
+func WithConfig(cfg *Config) Option {
+	return func(s *Server) error {
+		s.config = cfg
+		s.httpAddrs = fmt.Sprintf("127.0.0.1:%d", cfg.Port)
+		return nil
+	}
+}
+
+func WithAuthMiddleware(mw gin.HandlerFunc) Option {
+	return func(s *Server) error {
+		s.authMiddleware = mw
+		return nil
+	}
 }
 
 func WithLogger(logger zerolog.Logger) Option {
@@ -104,19 +122,45 @@ func (s *Server) startListening() {
 
 func (s *Server) registerWSRoutes() {
 	if s.wsServer == nil {
+		roles := []string{"tow_driver", "tow_subscriber"}
+		if s.config != nil && len(s.config.Roles) > 0 {
+			roles = s.config.Roles
+		}
+
 		allowedOrigins := loadAllowedOrigins()
 		wsOptions := websockethub.WebsocketServerOptions{
-			Roles:          []string{"tow_driver", "tow_subscriber"},
+			Roles:          roles,
 			AllowedOrigins: allowedOrigins,
 			Logger:         s.logger,
 		}
 		s.wsServer = websockethub.NewWebsocketServer(wsOptions)
+		s.registerChannels()
 	}
 	wsGroup := s.httpRouter.Group("/ws")
-	// if s.authMiddleware != nil {
-	// 	wsGroup.Use(s.authMiddleware)
-	// }
+	if s.authMiddleware != nil {
+		wsGroup.Use(s.authMiddleware)
+	}
 	wsGroup.GET("/:role", s.wsServer.WebsocketUpgradeHandler)
+}
+
+func (s *Server) registerChannels() {
+	if s.config == nil {
+		return
+	}
+	for _, chCfg := range s.config.Channels {
+		v, ok := wsPB.Channel_value[chCfg.Name]
+		if !ok {
+			s.logger.Warn().Str("channel", chCfg.Name).Msg("unknown channel name, skipping")
+			continue
+		}
+		ch := wsPB.Channel(v)
+		pubSub := newRawChannel()
+		if err := s.wsServer.RegisterChannel(chCfg.Roles, ch, pubSub); err != nil {
+			s.logger.Error().Str("channel", chCfg.Name).Err(err).Msg("failed to register channel")
+		} else {
+			s.logger.Info().Str("channel", chCfg.Name).Msg("registered channel")
+		}
+	}
 }
 
 func (s *Server) startWSServer() {

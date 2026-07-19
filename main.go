@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"os"
 	"os/signal"
 	"syscall"
@@ -13,6 +14,9 @@ import (
 )
 
 func main() {
+	cfgPath := flag.String("config", "", "path to JSON config file")
+	flag.Parse()
+
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 
 	output := zerolog.ConsoleWriter{Out: os.Stdout}
@@ -22,9 +26,17 @@ func main() {
 		Timestamp().
 		Logger()
 
-	srv, err := server.NewServer(
-		server.WithLogger(logger),
-	)
+	opts := []server.Option{server.WithLogger(logger)}
+
+	if *cfgPath != "" {
+		cfg, err := server.LoadConfig(*cfgPath)
+		if err != nil {
+			logger.Fatal().Err(err).Msg("failed to load config")
+		}
+		opts = append(opts, server.WithConfig(cfg))
+	}
+
+	srv, err := server.NewServer(opts...)
 	if err != nil {
 		logger.Fatal().AnErr("Failed to setup server", err).Send()
 	}
