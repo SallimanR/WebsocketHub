@@ -14,7 +14,18 @@ go install github.com/SallimanR/websockethub@latest
 ```
 ### run the server:
 ```sh
-websockethub
+websockethub -config websockethub.json
+```
+
+Example config:
+```json
+{
+  "port": 8080,
+  "roles": ["tow_driver", "tow_subscriber"],
+  "channels": [
+    { "name": "GPS_REALTIME", "roles": ["tow_driver", "tow_subscriber"] }
+  ]
+}
 ```
 
 ## Usage as library
@@ -49,31 +60,69 @@ import (
 
     "github.com/SallimanR/websockethub/websockethub"
     wsPB "github.com/SallimanR/websockethub/websockethub/proto"
+    "google.golang.org/protobuf/proto"
 )
 
 type MovingDriver struct {
-	DriverID   int64
-	Latitude   float32
-	Longitude  float32
-	TravelTime time.Time
-	PathMeters int32
+    DriverID   int64
+    Latitude   float32
+    Longitude  float32
+    TravelTime time.Time
+    PathMeters int32
 }
 
 type MovingDriverWithPoints struct {
-	MovingDriver
-	Points [][2]float32
+    MovingDriver
+    Points [][2]float32
 }
 
-type GPSRealtimeChannel = *websockethub.PubSubChannel[entity.MovingDriverWithPoints]
+type GPSRealtimeChannel struct {
+    *websockethub.PubSubChannel[MovingDriverWithPoints]
+}
 
-func NewGPSRealtimeChannel(wsServer *websockethub.WebsocketServer, roles []string) (*GPSRealtimeChannel, wsPB.Channel, error) {
-	const channelName = wsPB.Channel_GPS_REALTIME
-    channel := websockethub.NewPubSubChannel[entity.MovingDriverWithPoints]()
-	err := wsServer.RegisterChannel(roles, channelName, channel)
-	if err != nil {
-		return nil, channelName, err
-	}
-	return channel, channelName, nil
+func NewGPSRealtimeChannel(wsServer *websockethub.WebsocketServer, roles []string) (*GPSRealtimeChannel, error) {
+    ch := &GPSRealtimeChannel{
+        PubSubChannel: websockethub.NewPubSubChannel[MovingDriverWithPoints](),
+    }
+    err := wsServer.RegisterChannel(roles, wsPB.Channel_GPS_REALTIME, ch)
+    if err != nil {
+        return nil, err
+    }
+    return ch, nil
+}
+
+func (c *GPSRealtimeChannel) Publish(publisherID int64, msg []byte) error {
+    var data wsPB.GPSUpdate
+    if err := proto.Unmarshal(msg, &data); err != nil {
+        return err
+    }
+    gpsData := MovingDriverWithPoints{
+        MovingDriver: MovingDriver{
+            DriverID:   publisherID,
+            Latitude:   data.Coordinates[0].Lat,
+            Longitude:  data.Coordinates[0].Lng,
+            TravelTime: time.Now(),
+            PathMeters: int32(len(data.Coordinates)),
+        },
+    }
+    c.Messages.Store(publisherID, gpsData)
+    return nil
+}
+
+func (c *GPSRealtimeChannel) GetMessages(publisherIDs []int64) ([]byte, error) {
+    var batch wsPB.MessageBatch
+    for _, id := range publisherIDs {
+        item, ok := c.Messages.Load(id)
+        if !ok {
+            continue
+        }
+        data, err := proto.Marshal(&item)
+        if err != nil {
+            return nil, err
+        }
+        batch.Data = append(batch.Data, data)
+    }
+    return proto.Marshal(&batch)
 }
 ```
 
