@@ -3,7 +3,7 @@ tmp_dir = "tmp"
 
 [build]
   entrypoint = "tmp/main"
-  cmd = "go build -o tmp/main cmd/main.go"
+  cmd = "go build -o tmp/main ."
   include_ext = ["go"]
   exclude_dir = ["vendor", "tmp"]
 

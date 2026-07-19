@@ -7,6 +7,16 @@
 WebsocketHub is a standalone server / Go library that supports registering 
 channels with specific message type for specific roles
 
+## Usage as standalone server
+### install the binary:
+```sh
+go install github.com/SallimanR/websockethub@latest
+```
+### run the server:
+```sh
+websockethub
+```
+
 ## Usage as library
 ### install the library:
 ```sh
@@ -77,7 +87,11 @@ air
 ### Production:
 run in the project root:
 ```sh
-go run ./cmd/main.go
+go run .
+```
+Or build the binary:
+```sh
+go build -o ./bin/websockethub .
 ```
 
 ### Running tests:
