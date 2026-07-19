@@ -10,7 +10,7 @@ import (
 	"github.com/lesismal/nbio/nbhttp"
 	"github.com/lesismal/nbio/nbhttp/websocket"
 
-	"websockethub/test/testutils/network"
+	"github.com/SallimanR/websockethub/test/testutils/network"
 )
 
 type WSDialer struct {

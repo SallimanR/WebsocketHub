@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 
-	wsPB "websockethub/internal/websockethub/proto"
+	wsPB "github.com/SallimanR/websockethub/websockethub/proto"
 )
 
 func WriteMessage(t testing.TB, conn *websocket.Conn, data []byte) {

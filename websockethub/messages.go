@@ -3,7 +3,7 @@ package websockethub
 import (
 	"google.golang.org/protobuf/proto"
 
-	wsPB "websockethub/internal/websockethub/proto"
+	wsPB "github.com/SallimanR/websockethub/websockethub/proto"
 )
 
 // func MarshalProtobufBatch[T proto.Message](data []byte, newMsg func() T) ([]byte, error) {

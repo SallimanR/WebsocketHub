@@ -4,7 +4,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	datastructures "websockethub/pkg/data_structures"
+	datastructures "github.com/SallimanR/websockethub/pkg/data_structures"
 )
 
 type ConnectionData struct {

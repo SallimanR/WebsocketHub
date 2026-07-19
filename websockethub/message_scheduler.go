@@ -8,8 +8,8 @@ import (
 	"github.com/lesismal/nbio/nbhttp/websocket"
 	"google.golang.org/protobuf/proto"
 
-	wsPB "websockethub/internal/websockethub/proto"
-	"websockethub/pkg/data_structures/timewheel"
+	wsPB "github.com/SallimanR/websockethub/websockethub/proto"
+	"github.com/SallimanR/websockethub/pkg/data_structures/timewheel"
 )
 
 type ConnSlot struct {

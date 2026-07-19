@@ -10,6 +10,11 @@ channels with specific message type for specific roles
 ## Usage as library
 ### with gin router, allowed origins for CORS protection and auth middleware
 ```go
+import (
+    "github.com/SallimanR/websockethub/websockethub"
+    "github.com/gin-gonic/gin"
+)
+
 func registerWSRoutes(router *gin.Engine, origins []string, authMiddleware gin.HandlerFunc) {
     wsOptions := websockethub.WebsocketServerOptions{
         Roles:          []string{"tow_driver", "tow_subscriber"},
@@ -24,6 +29,13 @@ func registerWSRoutes(router *gin.Engine, origins []string, authMiddleware gin.H
 ### register channel with message type
 example with gps realtime channel
 ```go
+import (
+    "time"
+
+    "github.com/SallimanR/websockethub/websockethub"
+    wsPB "github.com/SallimanR/websockethub/websockethub/proto"
+)
+
 type MovingDriver struct {
 	DriverID   int64
 	Latitude   float32

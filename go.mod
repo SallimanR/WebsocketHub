@@ -1,4 +1,4 @@
-module websockethub
+module github.com/SallimanR/websockethub
 
 go 1.26.5
 

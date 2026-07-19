@@ -5,7 +5,7 @@ import (
 
 	"github.com/lesismal/nbio/nbhttp/websocket"
 
-	datastructures "websockethub/pkg/data_structures"
+	datastructures "github.com/SallimanR/websockethub/pkg/data_structures"
 )
 
 type ChannelActions interface {

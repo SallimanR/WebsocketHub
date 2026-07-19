@@ -7,7 +7,7 @@ import (
 	"syscall"
 	"time"
 
-	"websockethub/cmd/server"
+	"github.com/SallimanR/websockethub/cmd/server"
 
 	"github.com/rs/zerolog"
 )

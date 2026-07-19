@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"websockethub/internal/websockethub"
+		"github.com/SallimanR/websockethub/websockethub"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
