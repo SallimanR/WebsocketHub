@@ -148,21 +148,22 @@ func TestAdvanceInSlots(t *testing.T) {
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 	currentTick := 0
+	maxTicks := 20
 	for range ticker.C {
 		due := wheel.Advance()
 		if len(due) > 0 {
 			logger.Debug().Any("due:", due).Send()
 
-			// logger.Debug().Int("currentTick", currentTick).Send()
 			nextExp := base + int64(currentTick+periodTicks)*int64(wheelTick)
 			logger.Debug().Int64("nextExp", nextExp).Send()
 			for _, connSlot := range due {
 				_ = wheel.Add(connSlot, nextExp)
-				// wheelSlot := wheel.Add(connSlot, nextExp)
-				// logger.Debug().Int("wheelSlot", wheelSlot).Send()
 			}
 		}
 		currentTick++
+		if currentTick >= maxTicks {
+			break
+		}
 	}
 }
 
@@ -192,21 +193,22 @@ func TestAdvanceInTime(t *testing.T) {
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 	currentTick := 0
+	maxTicks := 20
 	for range ticker.C {
 		due := wheel.Advance()
 		if len(due) > 0 {
 			logger.Debug().Any("due:", due).Send()
 
-			// logger.Debug().Int("currentTick", currentTick).Send()
 			nextExp := time.Now().Add(periodTime).UnixNano()
 			logger.Debug().Int64("nextExp", nextExp).Send()
 			for _, connSlot := range due {
 				_ = wheel.Add(connSlot, nextExp)
-				// wheelSlot := wheel.Add(connSlot, nextExp)
-				// logger.Debug().Int("wheelSlot", wheelSlot).Send()
 			}
 		}
 		currentTick++
+		if currentTick >= maxTicks {
+			break
+		}
 	}
 }
 
