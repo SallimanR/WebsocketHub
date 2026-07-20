@@ -34,6 +34,12 @@ Example config:
 go get github.com/SallimanR/websockethub
 ```
 
+For realworld example see [gps_realtime_channel](https://github.com/SallimanR/GeoMove_Public/blob/main/backend/monolith/internal/domains/geolocation/interface/websocket/gps_realtime_channel.go)
+
+[Tests for gps_realtime_channel](https://github.com/SallimanR/GeoMove_Public/blob/main/backend/monolith/test/integration/gps_realtime_test.go)
+
+[Benchmark for gps_realtime_channel](https://github.com/SallimanR/GeoMove_Public/blob/main/backend/monolith/test/integration/gps_realtime_bench_test.go)
+
 example with gin router, allowed origins for CORS protection and auth middleware
 ```go
 import (
