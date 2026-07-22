@@ -9,9 +9,10 @@
 WebsocketHub — это standalone-сервер и Go-библиотека, позволяющая регистрировать каналы с определённым типом сообщений для конкретных ролей.
 
 ## Архитектура
-### Неблокирующий I/O
+### Неблокирующий I/O (Input/Output)
 - Чтение и запись сообщений через WebSocket полностью неблокирующие
-- Нет двух goroutine (read/write) для каждого подключения: `NBIO` использует epoll (Linux) / kqueue (BSD, macOS), что радикально снижает потребление памяти и не нагружает планировщик Go:
+- Нет двух goroutine (read/write) для каждого подключения: `NBIO` использует epoll (Linux) / kqueue (BSD, macOS),
+что радикально снижает потребление памяти и не нагружает планировщик Go:
 
 ```
   +-------------------+
@@ -20,7 +21,7 @@ WebsocketHub — это standalone-сервер и Go-библиотека, по
             |
             v (HTTP / TCP)
   +-------------------+
-  |       Epoll       | (ожидание на уровне ядра)
+  |       Epoll       | (ожидание на уровне ядра ОС)
   +---------+---------+
             |
     (событие EPOLLIN)
@@ -95,7 +96,7 @@ go get github.com/SallimanR/websockethub
 
 [Бенчмарк gps_realtime_channel](https://github.com/SallimanR/GeoMove_Public/blob/main/backend/monolith/test/integration/gps_realtime_bench_test.go)
 
-Пример с Gin-роутером, CORS и auth-middleware:
+Пример с Gin http роутером, CORS (защита от доступа со сторонних доменов) и авторизацией:
 ```go
 import (
     "github.com/SallimanR/websockethub/websockethub"
