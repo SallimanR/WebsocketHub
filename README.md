@@ -3,21 +3,76 @@
   WebsocketHub
 </h1>
 
-## About
-WebsocketHub is a standalone server / Go library that supports registering 
-channels with specific message type for specific roles
+## [ENGLISH README](./README_EN.md)
 
-## Usage as standalone server
-#### install the binary:
+## О проекте
+WebsocketHub — это standalone-сервер и Go-библиотека, позволяющая регистрировать каналы с определённым типом сообщений для конкретных ролей.
+
+## Архитектура
+### Неблокирующий I/O
+- Чтение и запись сообщений через WebSocket полностью неблокирующие
+- Нет двух goroutine (read/write) для каждого подключения: `NBIO` использует epoll (Linux) / kqueue (BSD, macOS), что радикально снижает потребление памяти и не нагружает планировщик Go:
+
+```
+  +-------------------+
+  |       Клиент      |
+  +---------+---------+
+            |
+            v (HTTP / TCP)
+  +-------------------+
+  |       Epoll       | (ожидание на уровне ядра)
+  +---------+---------+
+            |
+    (событие EPOLLIN)
+            |
+            v
+  +-------------------+
+  |  Пул обработчиков | (фиксированное число goroutines)
+  +-------------------+
+```
+##### В теории масштабируется до **1 миллиона+ соединений**
+- [`NBIO`: бенчмарк 1 млн WebSocket-соединений](https://github.com/lesismal/nbio#1m-websocket-connections-benchmark)
+- [Time wheel для миллионов конкурентных задач](https://dev.to/kevwan/implement-a-timing-wheel-for-millions-of-concurrent-tasks-30oi)
+- [Миллион WebSocket и Go](https://habr.com/ru/companies/vk/articles/331784/) — Сергей Камардин, разработчик в Mail.Ru / VK
+
+### Роли
+- WebsocketHub оперирует набором ролей, под которые регистрируются каналы
+
+### Каналы
+WebsocketHub построен на каналах, ролях и RBAC (авторизация по ролям):
+- каждый канал имеет свой тип сообщений
+- каждый канал реализует интерфейс ChannelActions тем самым отделяясь от кода основного сервера
+- каждый канал регистрируется на определённый набор ролей
+
+### Сообщения
+- WebsocketHub использует Protobuf для сообщений
+- формат: запрос/ответ
+- типы сообщений: Publish, Subscribe, Unsubscribe
+
+### Планировщик сообщений
+- WebsocketHub имеет планировщик, который распределяет рассылку сообщений каждому пользователю через равные промежутки времени (тики)
+- используется структура данных [time wheel](./pkg/data_structures/timewheel/time_wheel.go)
+
+## Почему WebSocket?
+WebSocket поддерживается всеми основными браузерами.
+
+WebSocket vs REST:
+1. не нужен HTTP-сервер и балансировщик нагрузки
+2. двунаправленная связь
+3. поддерживает бинарный формат сообщений (эффективнее текстового JSON)
+4. сохраняет состояние соединения — можно кэшировать подписки на сервере
+
+## Использование как standalone-сервера
+#### Установка бинарника:
 ```sh
 go install github.com/SallimanR/websockethub@latest
 ```
-#### run the server:
+#### Запуск сервера:
 ```sh
 websockethub -config websockethub.json
 ```
 
-Example config:
+Пример конфигурации:
 ```json
 {
   "port": 8080,
@@ -28,19 +83,19 @@ Example config:
 }
 ```
 
-## Usage as library
-#### install the library:
+## Использование как библиотеки
+#### Установка:
 ```sh
 go get github.com/SallimanR/websockethub
 ```
 
-For realworld example see [gps_realtime_channel](https://github.com/SallimanR/GeoMove_Public/blob/main/backend/monolith/internal/domains/geolocation/interface/websocket/gps_realtime_channel.go)
+Реальный пример использования: [gps_realtime_channel](https://github.com/SallimanR/GeoMove_Public/blob/main/backend/monolith/internal/domains/geolocation/interface/websocket/gps_realtime_channel.go)
 
-[Tests for gps_realtime_channel](https://github.com/SallimanR/GeoMove_Public/blob/main/backend/monolith/test/integration/gps_realtime_test.go)
+[Тесты gps_realtime_channel](https://github.com/SallimanR/GeoMove_Public/blob/main/backend/monolith/test/integration/gps_realtime_test.go)
 
-[Benchmark for gps_realtime_channel](https://github.com/SallimanR/GeoMove_Public/blob/main/backend/monolith/test/integration/gps_realtime_bench_test.go)
+[Бенчмарк gps_realtime_channel](https://github.com/SallimanR/GeoMove_Public/blob/main/backend/monolith/test/integration/gps_realtime_bench_test.go)
 
-example with gin router, allowed origins for CORS protection and auth middleware
+Пример с Gin-роутером, CORS и auth-middleware:
 ```go
 import (
     "github.com/SallimanR/websockethub/websockethub"
@@ -58,8 +113,8 @@ func registerWSRoutes(router *gin.Engine, origins []string, authMiddleware gin.H
 	wsGroup.GET("/:role", wsServer.WebsocketUpgradeHandler)
 }
 ```
-#### register channel with message type
-example with gps realtime channel
+#### Регистрация канала со своим типом сообщений
+Пример с каналом GPS в реальном времени:
 ```go
 import (
     "time"
@@ -129,61 +184,29 @@ func (c *GPSRealtimeChannel) GetMessages(publisherIDs []int64) ([]byte, error) {
 }
 ```
 
-## Developing
-#### Development mode:
-run server with hot code reload:
+## Разработка
+#### Режим разработки:
+запуск сервера с hot code reload:
 ```sh
 air
 ```
 
-#### Production:
-run in the project root:
+#### Продакшн:
+запуск из корня проекта:
 ```sh
 go run .
 ```
-Or build the binary:
+Или сборка бинарника:
 ```sh
 go build -o ./bin/websockethub .
 ```
 
-#### Running tests:
+#### Запуск тестов:
 ```sh
 go test ./...
 ```
 
-#### generate protobuf
+#### Генерация protobuf:
 ```sh
 generate_protobuf.sh
-
 ```
-
-
-## Architecture
-### Non-blocking I/O
-- Message reads and writes to websocket connection are fully non-blocking
-- No goroutine per connection: NBIO uses epoll(Linux) / kqueue(BSD based OSs, MacOS)
-which means that memory usage is way lower per connection and Go's scheduler is not loaded
-so in theory it scales up to 1 Million+ connections
-
-### Roles
-- WebsocketHub have a set of roles under which channels can be registered
-### Channels
-WebsocketHub is based on channels, roles and RBAC:
-- each channels have its own message type
-- each channel is interfaced by ChannelActions interface
-- each channel is registered to set of roles
-### Messages:
-- WebsocketHub uses protobuf for messages
-- request/response messages
-- each message have a type of Publish, Subscribe, Unsubscribe 
-### Message scheduler
-- WebsocketHub have a message scheduler that schedules each message's broadcast for each user for a constant period of ticks
-- it uses a version of [time wheel](./pkg/data_structures/timewheel/time_wheel.go) data structure
-
-## Why Websocket?
-Websocket is supported in all major browsers
-Websocket vs REST:
-1. no need for http server and load balancer
-2. bidirectional
-3. supports binary format for messages (more effective then text based JSON)
-4. stateful => ability to cache subscriptions on server side
