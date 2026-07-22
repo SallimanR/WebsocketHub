@@ -91,10 +91,7 @@ func NewGPSRealtimeChannel(wsServer *websockethub.WebsocketServer, roles []strin
         PubSubChannel: websockethub.NewPubSubChannel[MovingDriverWithPoints](),
     }
     err := wsServer.RegisterChannel(roles, wsPB.Channel_GPS_REALTIME, ch)
-    if err != nil {
-        return nil, err
-    }
-    return ch, nil
+    return ch, err
 }
 
 func (c *GPSRealtimeChannel) Publish(publisherID int64, msg []byte) error {
@@ -188,5 +185,5 @@ Websocket is supported in all major browsers
 Websocket vs REST:
 1. no need for http server and load balancer
 2. bidirectional
-3. supports binary format for messages
+3. supports binary format for messages (more effective then text based JSON)
 4. stateful => ability to cache subscriptions on server side
